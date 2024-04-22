@@ -16,7 +16,7 @@ from llm_jailbreaking_defense.judges import KeywordMatchingJudge
 class SmoothLLMConfig(DefenseConfig):
     perturbation_type: str = field(default='swap')
     perturbation_ratio: float = field(default=0.1)
-    num_sampless: int = field(default=3)
+    num_samples: int = field(default=3)
 
     def __post_init__(self):
         self.defense_method = "SmoothLLM"
@@ -30,11 +30,11 @@ class SmoothLLMConfig(DefenseConfig):
 
 
 class SmoothLLMDefense(DefenseBase):
-    def __init__(self, config, **kwargs):
+    def __init__(self, config, *arg, **kwargs):
         super().__init__(config)
         judge = KeywordMatchingJudge("")
         self.judge = judge
-        self.batch_size = config.batch_size
+        self.batch_size = 512 # config.batch_size
         self.num_samples = config.num_samples
         self.perturbation_type = config.perturbation_type
         self.perturbation_ratio = config.perturbation_ratio

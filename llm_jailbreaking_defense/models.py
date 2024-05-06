@@ -211,18 +211,18 @@ class TargetLM():
             if self.template is None:
                 _, self.template = get_model_path_and_template(model_name)
 
-    def get_response(self, prompts_list, system_prompt=None, verbose=True, **kwargs):
+    def get_response(self, prompts_list, verbose=True, **kwargs):
         batch_size = len(prompts_list)
-        convs_list = [conv_template(self.template) for _ in range(batch_size)]
         full_prompts = []
+        convs_list = [conv_template(self.template) for _ in range(batch_size)]
         for conv, prompt in zip(convs_list, prompts_list):
-            if system_prompt is not None:
-                conv.system_message = system_prompt
             if isinstance(prompt, str):
                 conv.append_message(conv.roles[0], prompt)
             elif isinstance(prompt, list): # handle multi-round conversations
                 for i, p in enumerate(prompt):
                     conv.append_message(conv.roles[i % 2], p)
+            elif isinstance(prompt, Conversation): # handle list of conversations
+                conv = prompt
             else:
                 raise NotImplementedError
 

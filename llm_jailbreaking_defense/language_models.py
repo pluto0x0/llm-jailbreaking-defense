@@ -154,15 +154,16 @@ class GPT(LanguageModel):
         client = OpenAI()
         for _ in range(self.API_MAX_RETRY):
             try:
-                response = client.completions.create(
+                response = client.chat.completions.create(
                     model = self.model_name,
-                    prompt = conv,
+                    messages = conv,
                     max_tokens = max_n_tokens,
                     temperature = temperature,
                     top_p = top_p,
                     timeout = self.API_TIMEOUT,
                 )
-                output = response.choices[0].text
+                output = response.choices[0].message.content
+
                 break
             except openai.APIError as e:
                 print(type(e), e)

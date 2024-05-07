@@ -11,6 +11,8 @@ from tqdm import tqdm
 from dataclasses import dataclass, field
 from .base import DefenseBase, DefenseConfig
 from llm_jailbreaking_defense.judges import KeywordMatchingJudge
+from fastchat.conversation import Conversation
+from copy import deepcopy
 
 @dataclass
 class SmoothLLMConfig(DefenseConfig):
@@ -42,7 +44,15 @@ class SmoothLLMDefense(DefenseBase):
     def defense(self, prompt, target_lm, response=None):
         all_inputs = []
         for _ in range(self.num_samples):
-            all_inputs.append(self._random_perturb(prompt))
+            if isinstance(prompt, Conversation):
+                ret = deepcopy(prompt)
+                for msg in ret.messages:
+                    msg[1] = self._random_perturb(msg[1])
+                all_inputs.append(ret)
+            elif isinstance(prompt, Conversation):
+                all_inputs.append(self._random_perturb(prompt))
+            else:
+                raise NotImplementedError
 
         # Iterate each batch of inputs
         all_outputs = []

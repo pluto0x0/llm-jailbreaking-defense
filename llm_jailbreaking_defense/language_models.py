@@ -23,6 +23,7 @@
 
 import openai
 import anthropic
+import together
 import os
 import time
 import torch
@@ -223,6 +224,60 @@ class Claude(LanguageModel):
                 print(type(e), e)
                 time.sleep(self.API_RETRY_SLEEP)
             time.sleep(self.API_QUERY_SLEEP)
+        return output
+
+    def batched_generate(self,
+                         prompts: List[List[Dict]],
+                         max_n_tokens: int,
+                         temperature: float,
+                         top_p: float = 1.0):
+        return [self.generate(prompt, max_n_tokens, temperature, top_p)
+                for prompt in prompts]
+
+class Together(LanguageModel):
+    API_RETRY_SLEEP = 10
+    API_ERROR_OUTPUT = "$ERROR$"
+    API_QUERY_SLEEP = 0.5
+    API_MAX_RETRY = 5
+    API_TIMEOUT = 20
+    API_KEY = os.getenv("TOGETHER_API_KEY")
+
+    def __init__(self, model_name):
+        super().__init__(model_name)
+        self.model = together.Together(api_key=self.API_KEY)
+
+    def generate(self,
+                 conv: List,
+                 max_n_tokens: int,
+                 temperature: float,
+                 top_p: float):
+        """
+        Args:
+            conv: List of conversations
+            max_n_tokens: int, max number of tokens to generate
+            temperature: float, temperature for sampling
+            top_p: float, top p for sampling
+        Returns:
+            str: generated response
+        """
+        output = self.API_ERROR_OUTPUT
+        for _ in range(self.API_MAX_RETRY):
+            try:
+                completion = self.model.chat.completions.create(
+                    model = self.model_name,
+                    messages = conv,
+                    max_tokens = max_n_tokens,
+                    temperature = temperature,
+                    top_p = top_p,
+                    timeout = self.API_TIMEOUT,
+                )
+                output = completion.choices[0].message.content
+                break
+            except anthropic.APIError as e:
+                print(type(e), e)
+                time.sleep(self.API_RETRY_SLEEP)
+            time.sleep(self.API_QUERY_SLEEP)
+
         return output
 
     def batched_generate(self,

@@ -151,8 +151,7 @@ class GPT(LanguageModel):
             str: generated response
         """
         output = self.API_ERROR_OUTPUT
-        from openai import OpenAI
-        client = OpenAI()
+        client = openai.OpenAI()
         for _ in range(self.API_MAX_RETRY):
             try:
                 response = client.chat.completions.create(
@@ -269,11 +268,11 @@ class Together(LanguageModel):
                     max_tokens = max_n_tokens,
                     temperature = temperature,
                     top_p = top_p,
-                    timeout = self.API_TIMEOUT,
+                    # timeout = self.API_TIMEOUT,
                 )
                 output = completion.choices[0].message.content
                 break
-            except anthropic.APIError as e:
+            except BaseException as e:
                 print(type(e), e)
                 time.sleep(self.API_RETRY_SLEEP)
             time.sleep(self.API_QUERY_SLEEP)

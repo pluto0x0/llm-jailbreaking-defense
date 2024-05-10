@@ -34,7 +34,7 @@ import fastchat
 from fastchat.model import get_conversation_template
 from fastchat.conversation import (Conversation, SeparatorStyle,
                                    register_conv_template, get_conv_template)
-from llm_jailbreaking_defense.language_models import GPT, Claude, HuggingFace
+from llm_jailbreaking_defense.language_models import GPT, Claude, HuggingFace, Together
 
 
 full_model_dict = {
@@ -80,6 +80,66 @@ full_model_dict = {
     }
 }
 
+together_model_dict = {
+    "Qwen/Qwen1.5-1.8B-Chat": {
+        "path": "Qwen/Qwen1.5-1.8B-Chat",
+        "template": "qwen-7b-chat"
+    },
+    "Qwen/Qwen1.5-72B-Chat": {
+        "path": "Qwen/Qwen1.5-72B-Chat",
+        "template": "qwen-7b-chat"
+    },
+    "mistralai/Mistral-7B-Instruct-v0.2": {
+        "path": "mistralai/Mistral-7B-Instruct-v0.2",
+        "template": "mistral"
+    },
+    "Open-Orca/Mistral-7B-OpenOrca": {
+        "path": "Open-Orca/Mistral-7B-OpenOrca",
+        "template": "mistral"
+    },
+    "teknium/OpenHermes-2p5-Mistral-7B": {
+        "path": "teknium/OpenHermes-2p5-Mistral-7B",
+        "template": "OpenHermes-2.5-Mistral-7B"
+    },
+    "teknium/OpenHermes-2-Mistral-7B": {
+        "path": "teknium/OpenHermes-2-Mistral-7B",
+        "template": "OpenHermes-2.5-Mistral-7B"
+    },
+    "mistralai/Mixtral-8x7B-Instruct-v0.1": {
+        "path": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+        "template": ""
+    },
+    "NousResearch/Nous-Hermes-2-Mistral-7B-DPO": {
+        "path": "NousResearch/Nous-Hermes-2-Mistral-7B-DPO",
+        "template": "Nous-Hermes-2-Mixtral-8x7B-DPO"
+    },
+    "NousResearch/Nous-Hermes-2-Mixtral-8x7B-SFT": {
+        "path": "NousResearch/Nous-Hermes-2-Mixtral-8x7B-SFT",
+        "template": "Nous-Hermes-2-Mixtral-8x7B-DPO"
+    },
+    "Gryphe/MythoMax-L2-13b": {
+        "path": "Gryphe/MythoMax-L2-13b",
+        "template": "alpaca"
+    },
+    "WizardLM/WizardLM-13B-V1.2": {
+        "path": "WizardLM/WizardLM-13B-V1.2",
+        "template": ""
+    },
+    "garage-bAInd/Platypus2-70B-instruct": {
+        "path": "garage-bAInd/Platypus2-70B-instruct",
+        "template": "vicuna_v1.1"
+    },
+    "NousResearch/Nous-Hermes-Llama2-13b": {
+        "path": "NousResearch/Nous-Hermes-Llama2-13b",
+        "template": "alpaca"
+    },
+    "meta-llama/Llama-2-70b-chat-hf": {
+        "path": "meta-llama/Llama-2-70b-chat-hf",
+        "template": "llama-2"
+    }
+}
+
+full_model_dict.update(together_model_dict)
 
 def conv_template(template_name):
     if template_name == "llama-2-new":
@@ -94,7 +154,10 @@ def conv_template(template_name):
 
 def load_indiv_model(model_name, max_memory=None, load_in_8bit=True):
     model_path, template = get_model_path_and_template(model_name)
-    if model_name.startswith("gpt-"):
+    print("!!!!!!!!!!!!!!", model_name)
+    if "/" in model_name:
+        lm = Together(model_name)
+    elif model_name.startswith("gpt-"):
         lm = GPT(model_name)
     elif model_name.startswith("claude-"):
         lm = Claude(model_name)
@@ -158,7 +221,7 @@ def register_modified_llama_template():
     )
     template = "llama-2-new"
     print("Using LLaMA-2 with fastchat < 0.2.24. "
-          f"Template changed to `{template}`.")
+              f"Template changed to `{template}`.")
     return template
 
 
@@ -226,7 +289,7 @@ class TargetLM():
             else:
                 raise NotImplementedError
 
-            if self.model_name is not None and "gpt" in self.model_name:
+            if self.model_name is not None and ("gpt" in self.model_name or "/" in self.model_name):
                 # Openai does not have separators
                 full_prompts.append(conv.to_openai_api_messages())
             else:
@@ -245,7 +308,6 @@ class TargetLM():
 
             # Get the current batch of inputs
             batch = full_prompts[i * self.batch_size:(i+1) * self.batch_size]
-
             # Run a forward pass through the LLM for each perturbed copy
             batch_outputs = self.model.batched_generate(
                 batch,

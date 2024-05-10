@@ -107,7 +107,7 @@ together_model_dict = {
     },
     "mistralai/Mixtral-8x7B-Instruct-v0.1": {
         "path": "mistralai/Mixtral-8x7B-Instruct-v0.1",
-        "template": ""
+        "template": "mistral"
     },
     "NousResearch/Nous-Hermes-2-Mistral-7B-DPO": {
         "path": "NousResearch/Nous-Hermes-2-Mistral-7B-DPO",
@@ -123,7 +123,7 @@ together_model_dict = {
     },
     "WizardLM/WizardLM-13B-V1.2": {
         "path": "WizardLM/WizardLM-13B-V1.2",
-        "template": ""
+        "template": "vicuna_v1.1"
     },
     "garage-bAInd/Platypus2-70B-instruct": {
         "path": "garage-bAInd/Platypus2-70B-instruct",
@@ -136,6 +136,10 @@ together_model_dict = {
     "meta-llama/Llama-2-70b-chat-hf": {
         "path": "meta-llama/Llama-2-70b-chat-hf",
         "template": "llama-2"
+    },
+    "lmsys/vicuna-13b-v1.5": {
+        "path": "lmsys/vicuna-13b-v1.5",
+        "template": "vicuna_v1.1"
     }
 }
 
@@ -154,7 +158,6 @@ def conv_template(template_name):
 
 def load_indiv_model(model_name, max_memory=None, load_in_8bit=True):
     model_path, template = get_model_path_and_template(model_name)
-    print("!!!!!!!!!!!!!!", model_name)
     if "/" in model_name:
         lm = Together(model_name)
     elif model_name.startswith("gpt-"):

@@ -8,7 +8,7 @@ from llm_jailbreaking_defense.models import TargetLM
 @dataclass
 class BacktranslationConfig(DefenseConfig):
     threshold: float = field(default=-2.0)
-    infer_model: str = field(default='vicuna')
+    infer_model: str = field(default='vicuna') # change to api version default infer model
     infer_lm_length: int = field(default=None)
     new_response_length: int = field(default=None)
     defense_lm_max_memory: float = field(default=None)

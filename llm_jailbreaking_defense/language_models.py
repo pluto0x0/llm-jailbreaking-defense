@@ -272,7 +272,11 @@ class Together(LanguageModel):
                 )
                 output = completion.choices[0].message.content
                 break
-            except BaseException as e:
+            except together.error.InvalidRequestError as e:
+                msg = str(e)
+                if "max_tokens" in msg:
+                    raise ValueError(e)
+            except Exception as e:
                 print(type(e), e)
                 time.sleep(self.API_RETRY_SLEEP)
             time.sleep(self.API_QUERY_SLEEP)
